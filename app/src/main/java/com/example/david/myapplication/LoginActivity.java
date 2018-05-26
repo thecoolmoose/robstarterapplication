@@ -74,7 +74,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
-
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -158,32 +157,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        final String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
 
-        final String passwordErrMsg = getString(R.string.error_invalid_password);
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(passwordErrMsg);
+        // Check for a valid password.
+        if (!isPasswordValid(password)) {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
 
-        // Return an error message if no password is entered.
-        if (TextUtils.isEmpty(password)) {
-            mPasswordView.setError(passwordErrMsg);
-            cancel = true;
-        }
-
         // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
+       if (!isEmailValid(email)) {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
@@ -192,9 +180,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
-            if (focusView != null) {
-                focusView.requestFocus();
-            }
+            focusView.requestFocus();
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
@@ -205,11 +191,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private boolean isEmailValid(final String email) {
+        if (TextUtils.isEmpty(email)) {
+            return false;
+        }
         final Pattern pattern = Patterns.EMAIL_ADDRESS;
         return pattern.matcher(email).matches();
     }
 
     private boolean isPasswordValid(final String password) {
+        // Return an error message if no password is entered.
+        if (TextUtils.isEmpty(password)) {
+            return false;
+        }
         final Pattern pattern;
         final Matcher matcher;
         pattern = Pattern.compile(PASSWORD_PATTERN);
@@ -346,11 +339,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            final Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            mAuthTask = null;
             showProgress(false);
 
             if (success) {
+                final Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
